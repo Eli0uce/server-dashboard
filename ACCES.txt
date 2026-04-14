@@ -1,0 +1,98 @@
+ACCES AU DASHBOARD - SERVER MONITORING
+======================================
+
+LOCALISATION DU PROJET
+──────────────────────
+Chemin: /Users/elias/bblogs/server-dashboard
+
+LE SERVEUR EST EN COURS D'EXECUTION!
+
+ACCES AU DASHBOARD
+──────────────────
+URL: http://localhost:3000
+
+Autres accès:
+- http://127.0.0.1:3000
+- http://<VOTRE_IP>:3000 (depuis autre machine)
+
+FICHIERS A CONSULTER
+────────────────────
+
+Pour commencer:
+  QUICKSTART.md        - Démarrage en 30 sec
+  README.md            - Vue d'ensemble
+
+Pour explorer:
+  app.js               - Logique du dashboard
+  data-generator.js    - Génération données
+  styles.css           - Design
+
+Pour intégrer:
+  INTEGRATION_GUIDE.md - Guide complet
+  api-integration.js   - Couche API
+
+Pour déployer:
+  DEPLOYMENT.md        - Guide déploiement
+  Dockerfile
+  docker-compose.yml
+
+Pour TV:
+  TV_GUIDE.md          - Affichage sur TV
+
+Pour structure:
+  FILES_INDEX.md       - Index des fichiers
+
+CONTROLES RAPIDES
+─────────────────
+F11            Plein écran
+P              Pause/Reprendre
+R              Rafraîchir
+?              Raccourcis clavier
+Ctrl+D         Mode debug
+
+DEMARRAGE
+─────────
+Le serveur tourne sur port 3000.
+
+Arrêter:    Ctrl+C
+Redémarrer: npm start
+
+VUE D'ENSEMBLE
+──────────────
+Le dashboard affiche:
+- Serveurs (6 serveurs avec CPU/RAM/Status)
+- Base de Données (Connexions, requêtes, cache hit)
+- Performance (Graphiques CPU/Mémoire 24h)
+- Réseau (Trafic inbound/outbound)
+- Logs (Les 8 derniers logs)
+- État de Santé (Indicateurs visuels)
+
+DONNEES
+───────
+Par défaut: Données FAKES générées aléatoirement
+Optionnel: Intégrer vos vraies données
+
+PORT
+────
+Par défaut: 3000
+Changer: PORT=8080 npm start
+
+DOCKER
+──────
+docker-compose up -d      (Démarrer)
+docker-compose logs -f    (Voir logs)
+docker-compose down       (Arrêter)
+
+AIDE
+────
+Appuyer sur ? dans le dashboard pour tous les raccourcis
+Appuyer sur F12 pour la console de développement
+
+PRET?
+─────
+Allez à: http://localhost:3000
+Appuyez sur F11 pour plein écran
+Appuyez sur ? pour les raccourcis
+
+Bon monitoring!
+

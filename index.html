@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Dashboard - Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <h1>Server Monitoring Dashboard</h1>
+            <div class="header-info">
+                <button id="audioToggle" class="audio-toggle" type="button" aria-pressed="false" title="Activer ou couper les sons d'alerte">Son: ON</button>
+                <span class="timestamp" id="timestamp">--:--:--</span>
+                <span class="status-indicator" id="statusIndicator">Live</span>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="dashboard-grid">
+            <!-- Servers Section -->
+            <section class="dashboard-section servers-section">
+                <h2>Serveurs</h2>
+                <div class="servers-grid" id="serversContainer">
+                    <!-- Generated dynamically -->
+                </div>
+            </section>
+
+            <!-- Database Section -->
+            <section class="dashboard-section database-section">
+                <h2>Base de Données</h2>
+                <div class="metrics-grid" id="dbMetricsContainer">
+                    <!-- Generated dynamically -->
+                </div>
+                <canvas id="dbChart" class="metric-chart"></canvas>
+            </section>
+
+            <!-- CPU/Memory Charts -->
+            <section class="dashboard-section charts-section">
+                <h2>Performance</h2>
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Network Section -->
+            <section class="dashboard-section network-section">
+                <h2>Réseau</h2>
+                <canvas id="networkChart" class="metric-chart"></canvas>
+            </section>
+
+            <!-- Logs Section -->
+            <section class="dashboard-section logs-section">
+                <h2>Logs Récents</h2>
+                <div class="logs-container" id="logsContainer">
+                    <!-- Generated dynamically -->
+                </div>
+            </section>
+
+            <!-- Health Status Section -->
+            <section class="dashboard-section health-section">
+                <h2>État de Santé</h2>
+                <div class="health-grid" id="healthContainer">
+                    <!-- Generated dynamically -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="data-generator.js"></script>
+    <script src="api-integration.js"></script>
+    <script src="app.js"></script>
+    <script src="advanced-features.js"></script>
+</body>
+</html>
+
