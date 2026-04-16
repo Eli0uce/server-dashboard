@@ -71,6 +71,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Acquittement d'alerte depuis le mobile vers la TV et les autres remotes
+    socket.on('alert_ack', (payload) => {
+        if (role === 'remote') {
+            io.to('tv').emit('alert_ack', payload);
+            io.to('remote').emit('alert_ack', payload);
+        }
+    });
+
     socket.on('disconnect', () => {
         if (role === 'tv') {
             setTimeout(() => {

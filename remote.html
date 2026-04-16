@@ -21,6 +21,12 @@
             <div class="remote-status" id="tvStatus">
                 <span id="statusText">Connexion…</span>
             </div>
+            <button class="icon-btn" id="reconnectBtn" title="Reconnecter la télécommande" aria-label="Reconnecter">
+                ↻
+            </button>
+            <button class="icon-btn lock-btn locked" id="safetyLockBtn" title="Déverrouiller les actions sensibles" aria-label="Verrou sécurité">
+                🔒
+            </button>
             <button class="icon-btn" id="shareBtn" title="Partager les URLs" aria-label="Partager">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -29,13 +35,57 @@
             </button>
         </header>
 
+        <section class="remote-quick-actions">
+            <button class="quick-action-btn" id="defaultViewBtn" type="button">🖥️ Vue par défaut</button>
+            <button class="quick-action-btn" id="ackAlertBtn" type="button" disabled>✅ Acquitter alerte</button>
+        </section>
+
+        <section class="remote-overview-grid">
+            <article class="overview-card">
+                <span class="overview-label">TV active</span>
+                <strong class="overview-value" id="overviewTvConnection">En attente</strong>
+            </article>
+            <article class="overview-card">
+                <span class="overview-label">Dernière synchro</span>
+                <strong class="overview-value" id="overviewLastSync">Jamais</strong>
+            </article>
+            <article class="overview-card overview-card-wide">
+                <span class="overview-label">URL / IP active</span>
+                <strong class="overview-value mono" id="overviewActiveUrl">--</strong>
+            </article>
+        </section>
+
         <!-- TV State Bar -->
         <div class="tv-state-bar">
             <span class="state-pill" id="stateSection">🖥️ Vue complète</span>
             <span class="state-pill" id="stateTheme">🌑 Dark</span>
             <span class="state-pill" id="stateZoom">🔍 Zoom ×1</span>
             <span class="state-pill" id="stateSpeed">⏱ 5s</span>
+            <span class="state-pill" id="stateReadable">👀 Standard</span>
+            <span class="state-pill" id="stateRotation">🔁 Rotation OFF</span>
         </div>
+
+        <section class="current-alert-panel" id="currentAlertPanel">
+            <div class="current-alert-head">
+                <span class="current-alert-title">Dernière alerte</span>
+                <span class="current-alert-badge healthy" id="currentAlertSeverity">healthy</span>
+            </div>
+            <p class="current-alert-message" id="currentAlertMessage">Aucune alerte reçue pour le moment.</p>
+            <div class="current-alert-meta">
+                <span id="currentAlertTime">--</span>
+                <span id="currentAlertAck">Non acquittée</span>
+            </div>
+        </section>
+
+        <section class="alert-history-panel">
+            <div class="panel-title-row">
+                <h2>Historique des alertes</h2>
+                <button class="text-btn" id="clearAlertHistoryBtn" type="button">Effacer</button>
+            </div>
+            <div class="alert-history-list" id="alertHistoryList">
+                <div class="empty-state">Aucune alerte enregistrée.</div>
+            </div>
+        </section>
 
         <!-- Button Groups (rendered by remote.js) -->
         <main class="remote-main" id="remoteMain"></main>
@@ -62,6 +112,7 @@
 
     </div>
 
+    <script src="config.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="remote.js"></script>
 </body>

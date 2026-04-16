@@ -450,6 +450,94 @@ body.focus-mode .section-focused {
     grid-column: 1 / -1;
     animation: focusIn .35s ease-out;
 }
+
+/* ── Mode ultra-lisible TV ── */
+body.readable-mode .dashboard-container {
+    max-width: 100%;
+    padding: 24px;
+}
+
+body.readable-mode .dashboard-grid {
+    gap: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+}
+
+body.readable-mode .dashboard-header {
+    padding: 22px 28px;
+}
+
+body.readable-mode .dashboard-header h1 {
+    font-size: 2.35rem;
+}
+
+body.readable-mode .dashboard-section {
+    padding: 22px;
+}
+
+body.readable-mode .dashboard-section h2 {
+    font-size: 1.55rem;
+    padding-bottom: 14px;
+}
+
+body.readable-mode .server-card,
+body.readable-mode .metric-card,
+body.readable-mode .health-item,
+body.readable-mode .chart-wrapper,
+body.readable-mode .log-entry {
+    border-radius: 16px;
+}
+
+body.readable-mode .server-card,
+body.readable-mode .metric-card,
+body.readable-mode .health-item {
+    padding: 18px;
+}
+
+body.readable-mode .server-card h3 {
+    font-size: 1.18rem;
+}
+
+body.readable-mode .server-stat,
+body.readable-mode .log-entry {
+    font-size: 1rem;
+}
+
+body.readable-mode .metric-value {
+    font-size: 2.4rem;
+}
+
+body.readable-mode .metric-unit,
+body.readable-mode .health-detail,
+body.readable-mode .server-stat-label,
+body.readable-mode .log-timestamp {
+    font-size: 0.84rem;
+}
+
+body.readable-mode .health-status {
+    font-size: 2.5rem;
+}
+
+body.readable-mode .chart-wrapper {
+    height: 360px;
+    padding: 16px;
+}
+
+/* ── Vue simplifiée TV ── */
+body.simplified-view #section-logs,
+body.simplified-view #section-network {
+    display: none;
+}
+
+body.simplified-view .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+}
+
+body.simplified-view .header-info .timestamp,
+body.simplified-view .header-info .status-indicator,
+body.simplified-view .remote-open-btn,
+body.simplified-view .remote-indicator {
+    opacity: 0.86;
+}
 @keyframes focusIn {
     from { opacity: .4; transform: scale(.98); }
     to   { opacity: 1;  transform: scale(1); }
@@ -540,6 +628,63 @@ body.theme-minimal .dashboard-section {
 .tv-toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* ── Bandeau d'alerte TV ── */
+.tv-alert-banner {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    left: 14px;
+    z-index: 10030;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    color: #eff6ff;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(2, 8, 18, 0.36);
+}
+
+.tv-alert-banner.hidden {
+    display: none;
+}
+
+.tv-alert-banner.warning {
+    background: rgba(120, 53, 15, 0.94);
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+.tv-alert-banner.critical {
+    background: rgba(127, 29, 29, 0.96);
+    border-color: rgba(248, 113, 113, 0.48);
+    animation: pulse 1.8s ease-in-out infinite;
+}
+
+.tv-alert-banner.healthy {
+    background: rgba(6, 78, 59, 0.94);
+    border-color: rgba(74, 222, 128, 0.35);
+}
+
+.tv-alert-title {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.tv-alert-message {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.tv-alert-meta {
+    font-size: 0.82rem;
+    color: rgba(239, 246, 255, 0.85);
+    white-space: nowrap;
 }
 
 /* ── Mobile Banner ── */

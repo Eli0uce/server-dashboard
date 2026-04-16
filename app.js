@@ -18,12 +18,22 @@ class Dashboard {
         this.currentZoom     = 1;
         this.remoteCount     = 0;
         this.lastBroadcastSeverity = 'healthy';
+        this.readableMode = false;
+        this.simplifiedView = false;
+        this.rotationEnabled = false;
+        this.rotationIntervalMs = (typeof CONFIG !== 'undefined' && CONFIG.tv?.defaultRotationIntervalMs) || 20000;
+        this.rotationIndex = 0;
+        this.rotationTimerId = null;
+        this.lastAlert = null;
+        this.lastAlertAck = null;
+        this.activeUrl = window.location.origin;
 
         this.initAudioControls();
         this.bindAudioUnlock();
         this.initializeCharts();
         this.render();
         this.updateClock();
+        this._updateAlertBanner();
 
         // Update data and UI every N seconds
         this.intervalId = setInterval(() => {
@@ -140,7 +150,8 @@ class Dashboard {
     handleHealthAlertSound(healthItems) {
         const severity = this.getHealthSeverity(healthItems);
         const now = Date.now();
-        const cooldownMs = severity === 'critical' ? 12000 : severity === 'warning' ? 30000 : 0;
+        const configuredCooldowns = (typeof CONFIG !== 'undefined' && CONFIG.health?.remoteBroadcastCooldown) || {};
+        const cooldownMs = configuredCooldowns[severity] ?? (severity === 'critical' ? 12000 : severity === 'warning' ? 30000 : 0);
         const escalated = this.getSeverityRank(severity) > this.getSeverityRank(this.lastHealthSeverity);
         const lastPlayed = this.lastAlertAt[severity] || 0;
         const cooldownPassed = severity !== 'healthy' && now - lastPlayed >= cooldownMs;
@@ -422,6 +433,7 @@ class Dashboard {
         container.innerHTML = dataGenerator.servers.map(server => `
             <div class="server-card">
                 <h3>${server.name}</h3>
+                ${this.simplifiedView ? '' : `
                 <div class="server-stat">
                     <span class="server-stat-label">Région:</span>
                     <span class="server-stat-value">${server.region}</span>
@@ -429,7 +441,7 @@ class Dashboard {
                 <div class="server-stat">
                     <span class="server-stat-label">IP:</span>
                     <span class="server-stat-value">${server.ip}</span>
-                </div>
+                </div>`}
                 <div class="server-stat">
                     <span class="server-stat-label">CPU:</span>
                     <span class="server-stat-value">${server.cpu.toFixed(1)}%</span>
@@ -466,16 +478,17 @@ class Dashboard {
                 <div class="metric-value">${metrics.throughput}</div>
                 <div class="metric-unit">ops/s</div>
             </div>
+            ${this.simplifiedView ? '' : `
             <div class="metric-card">
                 <h3>Cache Hit</h3>
                 <div class="metric-value">${metrics.cacheHit}%</div>
                 <div class="metric-unit">ratio</div>
-            </div>
+            </div>`}
         `;
     }
 
     renderLogs() {
-        const logs = dataGenerator.generateLogs();
+        const logs = dataGenerator.generateLogs().slice(0, this.simplifiedView ? 4 : 8);
         const container = document.getElementById('logsContainer');
         container.innerHTML = logs.map(log => `
             <div class="log-entry ${log.type}">
@@ -533,6 +546,11 @@ Dashboard.prototype.initRemoteControl = function () {
         // Renvoyer le nouvel état après chaque commande
         this._socket.emit('tv_state', this._getTVState());
     });
+
+    this._socket.on('alert_ack', (payload) => {
+        this._handleAlertAck(payload);
+        this._socket.emit('tv_state', this._getTVState());
+    });
 };
 
 Dashboard.prototype._getTVState = function () {
@@ -541,7 +559,14 @@ Dashboard.prototype._getTVState = function () {
         theme:        this.currentTheme,
         zoom:         this.currentZoom,
         speed:        this.updateInterval,
-        audioEnabled: this.audioEnabled
+        audioEnabled: this.audioEnabled,
+        readableMode: this.readableMode,
+        simplifiedView: this.simplifiedView,
+        rotationEnabled: this.rotationEnabled,
+        rotationIntervalMs: this.rotationIntervalMs,
+        activeUrl: this.activeUrl,
+        lastAlert: this.lastAlert,
+        lastAlertAck: this.lastAlertAck
     };
 };
 
@@ -582,6 +607,15 @@ Dashboard.prototype._handleRemoteCommand = function (cmd) {
         case 'theme':
             this._setTheme(cmd.value);
             break;
+        case 'readable_mode':
+            this._setReadableMode(typeof cmd.enabled === 'boolean' ? cmd.enabled : !this.readableMode, true);
+            break;
+        case 'simplified_view':
+            this._setSimplifiedView(typeof cmd.enabled === 'boolean' ? cmd.enabled : !this.simplifiedView, true);
+            break;
+        case 'rotation':
+            this._setRotation(typeof cmd.enabled === 'boolean' ? cmd.enabled : !this.rotationEnabled, cmd.intervalMs);
+            break;
         default:
             break;
     }
@@ -610,8 +644,6 @@ Dashboard.prototype._emitRemoteAlert = function (severity, healthItems) {
         return;
     }
 
-    this.lastBroadcastSeverity = severity;
-
     const alert = {
         severity,
         timestamp: Date.now(),
@@ -627,10 +659,117 @@ Dashboard.prototype._emitRemoteAlert = function (severity, healthItems) {
         }))
     };
 
+    this.lastBroadcastSeverity = severity;
+    this.lastAlert = alert;
+    this.lastAlertAck = null;
+    this._updateAlertBanner();
     this._socket.emit('tv_alert', alert);
 };
 
-Dashboard.prototype._focusSection = function (section) {
+Dashboard.prototype._handleAlertAck = function (payload = {}) {
+    if (!this.lastAlert) {
+        return;
+    }
+
+    if (payload.timestamp && this.lastAlert.timestamp !== payload.timestamp) {
+        return;
+    }
+
+    this.lastAlertAck = payload.acknowledgedAt || Date.now();
+    this.lastAlert = {
+        ...this.lastAlert,
+        acknowledgedAt: this.lastAlertAck
+    };
+    this._updateAlertBanner();
+    this._showToast('Alerte acquittee');
+};
+
+Dashboard.prototype._setReadableMode = function (enabled, autoZoom = false) {
+    const next = typeof enabled === 'boolean'
+        ? (enabled === this.readableMode ? !this.readableMode : enabled)
+        : !this.readableMode;
+    this.readableMode = next;
+    document.body.classList.toggle('readable-mode', this.readableMode);
+    if (this.readableMode && autoZoom && this.currentZoom < ((typeof CONFIG !== 'undefined' && CONFIG.tv?.ultraReadableZoom) || 2)) {
+        this._setZoom((typeof CONFIG !== 'undefined' && CONFIG.tv?.ultraReadableZoom) || 2);
+    }
+    if (!this.readableMode && autoZoom && this.currentZoom > 2) {
+        this._setZoom(2);
+    }
+    setTimeout(() => Object.values(this.charts).forEach(c => c.resize()), 60);
+    this._showToast(this.readableMode ? 'Mode ultra lisible active' : 'Mode ultra lisible desactive');
+};
+
+Dashboard.prototype._setSimplifiedView = function (enabled) {
+    const next = typeof enabled === 'boolean'
+        ? (enabled === this.simplifiedView ? !this.simplifiedView : enabled)
+        : !this.simplifiedView;
+    this.simplifiedView = next;
+    document.body.classList.toggle('simplified-view', this.simplifiedView);
+    this.render();
+    setTimeout(() => Object.values(this.charts).forEach(c => c.resize()), 60);
+    this._showToast(this.simplifiedView ? 'Vue simplifiee active' : 'Vue simplifiee desactivee');
+};
+
+Dashboard.prototype._setRotation = function (enabled, intervalMs) {
+    const nextEnabled = typeof enabled === 'boolean'
+        ? (enabled === this.rotationEnabled ? !this.rotationEnabled : enabled)
+        : !this.rotationEnabled;
+    this.rotationIntervalMs = Number(intervalMs) || this.rotationIntervalMs || 20000;
+
+    if (this.rotationTimerId) {
+        clearInterval(this.rotationTimerId);
+        this.rotationTimerId = null;
+    }
+
+    this.rotationEnabled = nextEnabled;
+
+    if (this.rotationEnabled) {
+        const sections = (typeof CONFIG !== 'undefined' && CONFIG.tv?.rotationSections) || ['servers', 'database', 'charts', 'health'];
+        this.rotationIndex = Math.max(0, sections.indexOf(this.currentSection));
+        this._focusSection(sections[this.rotationIndex], { silent: true });
+        this.rotationTimerId = setInterval(() => {
+            this.rotationIndex = (this.rotationIndex + 1) % sections.length;
+            this._focusSection(sections[this.rotationIndex], { silent: true });
+            if (this._socket?.connected) {
+                this._socket.emit('tv_state', this._getTVState());
+            }
+        }, this.rotationIntervalMs);
+    }
+
+    this._showToast(this.rotationEnabled ? `Rotation active (${Math.round(this.rotationIntervalMs / 1000)}s)` : 'Rotation desactivee');
+};
+
+Dashboard.prototype._updateAlertBanner = function () {
+    let banner = document.getElementById('tvAlertBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'tvAlertBanner';
+        banner.className = 'tv-alert-banner hidden';
+        banner.innerHTML = '<strong class="tv-alert-title"></strong><span class="tv-alert-message"></span><span class="tv-alert-meta"></span>';
+        document.body.appendChild(banner);
+    }
+
+    const titleEl = banner.querySelector('.tv-alert-title');
+    const messageEl = banner.querySelector('.tv-alert-message');
+    const metaEl = banner.querySelector('.tv-alert-meta');
+    const alert = this.lastAlert;
+
+    if (!alert) {
+        banner.className = 'tv-alert-banner hidden';
+        return;
+    }
+
+    const severity = alert.severity || 'healthy';
+    banner.className = `tv-alert-banner ${severity}`;
+    titleEl.textContent = severity === 'critical' ? 'Alerte critique' : severity === 'warning' ? 'Alerte warning' : 'Retour a la normale';
+    messageEl.textContent = alert.message || 'Alerte dashboard';
+    metaEl.textContent = alert.acknowledgedAt
+        ? `Acquittee a ${new Date(alert.acknowledgedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+        : `Recue a ${new Date(alert.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+};
+
+Dashboard.prototype._focusSection = function (section, options = {}) {
     this.currentSection = section;
     const body = document.body;
     const SELECTORS = {
@@ -653,7 +792,9 @@ Dashboard.prototype._focusSection = function (section) {
     }
 
     setTimeout(() => Object.values(this.charts).forEach(c => c.resize()), 60);
-    this._showToast(section === 'all' ? 'Vue complete' : `Focalise: ${section}`);
+    if (!options.silent) {
+        this._showToast(section === 'all' ? 'Vue complete' : `Focalise: ${section}`);
+    }
 };
 
 Dashboard.prototype._highlightSection = function (section) {

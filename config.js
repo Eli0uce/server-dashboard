@@ -48,7 +48,12 @@ const CONFIG = {
         cpuCriticalThreshold: 80,
         memoryWarningThreshold: 70,
         memoryCriticalThreshold: 85,
-        networkWarningThreshold: 8000
+        networkWarningThreshold: 8000,
+        remoteBroadcastCooldown: {
+            warning: 30000,
+            critical: 12000,
+            healthy: 0
+        }
     },
 
     // Logs
@@ -69,6 +74,24 @@ const CONFIG = {
     // API
     api: {
         baseUrl: 'http://localhost:3000/api'
+    },
+
+    // Télécommande mobile
+    remote: {
+        alertHistoryLimit: 20,
+        sensitiveActions: ['fullscreen', 'toggle_sound', 'speed'],
+        notificationCooldownMs: {
+            warning: 30000,
+            critical: 12000,
+            healthy: 0
+        }
+    },
+
+    // Modes d'affichage TV
+    tv: {
+        rotationSections: ['servers', 'database', 'charts', 'health'],
+        defaultRotationIntervalMs: 20000,
+        ultraReadableZoom: 2
     }
 };
 

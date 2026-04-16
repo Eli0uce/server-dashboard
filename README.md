@@ -372,6 +372,47 @@ cd /Users/elias/bblogs/server-dashboard
 ./update-shuttle.sh lbiret@192.168.88.74
 ```
 
+### Aide complète
+
+```bash
+./update-shuttle.sh --help
+```
+
+### Exemples personnalisés
+
+```bash
+# Simulation complète sans exécution
+./update-shuttle.sh -t lbiret@192.168.88.74 --dry-run --verbose --yes
+
+# Déploiement avec options explicites
+./update-shuttle.sh -t lbiret@192.168.88.74 \
+  --port 3000 \
+  --app-name dashboard \
+  --remote-dir /opt/server-dashboard \
+  --force-kill-port
+
+# Déploiement rapide sans backup ni validation HTTP
+./update-shuttle.sh -t lbiret@192.168.88.74 \
+  --no-backup \
+  --skip-validate \
+  --yes
+
+# Mode non interactif (utile en CI)
+./update-shuttle.sh -t lbiret@192.168.88.74 \
+  --non-interactive \
+  --yes
+```
+
+### Options clés
+
+- `--dry-run` : affiche les actions sans exécuter
+- `--verbose` : logs détaillés
+- `--force-kill-port` : libère le port cible automatiquement
+- `--skip-*` : saute une étape (`precheck`, `backup`, `sync`, `install`, `restart`, `validate`)
+- `--no-backup` / `--no-rollback` : contrôle sauvegarde et rollback
+- `--ssh-opts` : passe des options SSH personnalisées
+- `--port`, `--app-name`, `--remote-dir` : personnalisation complète du déploiement
+
 ### Ce que fait le script
 
 - copie les fichiers vers `/opt/server-dashboard`
@@ -406,6 +447,13 @@ pm2 save --force
 
 ```bash
 pm2 logs dashboard --lines 50
+```
+
+### Lancer le diagnostic d'exploitation
+
+```bash
+cd /opt/server-dashboard
+./doctor.sh
 ```
 
 ### Vérifier le statut
@@ -480,6 +528,7 @@ GET /api/logs
 - `remote.css` : styles mobile
 - `deploy-ubuntu.sh` : installation initiale Ubuntu/Shuttle
 - `update-shuttle.sh` : mise à jour depuis le Mac
+- `doctor.sh` : diagnostic rapide Shuttle / PM2 / routes / IP / Tailscale
 - `UBUNTU_SETUP.md` : guide Ubuntu détaillé
 - `TV_GUIDE.md` : conseils d'affichage TV
 
