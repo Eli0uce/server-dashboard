@@ -12,13 +12,20 @@ class Dashboard {
     }
 
     init() {
+        // Remote control state
+        this.currentSection  = 'all';
+        this.currentTheme    = 'dark';
+        this.currentZoom     = 1;
+        this.remoteCount     = 0;
+        this.lastBroadcastSeverity = 'healthy';
+
         this.initAudioControls();
         this.bindAudioUnlock();
         this.initializeCharts();
         this.render();
         this.updateClock();
 
-        // Update data and UI every 5 seconds
+        // Update data and UI every N seconds
         this.intervalId = setInterval(() => {
             dataGenerator.updateData();
             this.updateCharts();
@@ -28,6 +35,9 @@ class Dashboard {
 
         // Update clock every second
         setInterval(() => this.updateClock(), 1000);
+
+        // StreamDeck remote control via Socket.io
+        this.initRemoteControl();
     }
 
     initAudioControls() {
@@ -138,6 +148,12 @@ class Dashboard {
         if (severity !== 'healthy' && (escalated || cooldownPassed)) {
             this.playAlertTone(severity);
             this.lastAlertAt[severity] = now;
+            this._emitRemoteAlert(severity, healthItems);
+        }
+
+        // Envoyer une notification de retour a la normale une seule fois.
+        if (severity === 'healthy' && this.lastBroadcastSeverity !== 'healthy') {
+            this._emitRemoteAlert('healthy', healthItems);
         }
 
         this.lastHealthSeverity = severity;
@@ -488,4 +504,233 @@ let dashboard;
 document.addEventListener('DOMContentLoaded', () => {
     dashboard = new Dashboard();
 });
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  StreamDeck Remote Control Methods (ajoutés à Dashboard.prototype)
+// ═══════════════════════════════════════════════════════════════════
+
+Dashboard.prototype.initRemoteControl = function () {
+    if (typeof io === 'undefined') return;
+
+    this._socket = io({ transports: ['websocket', 'polling'] });
+
+    this._socket.on('connect', () => {
+        this._socket.emit('join', { role: 'tv' });
+    });
+
+    this._socket.on('request_state', () => {
+        this._socket.emit('tv_state', this._getTVState());
+    });
+
+    this._socket.on('remote_count', (count) => {
+        this.remoteCount = count;
+        this._updateRemoteIndicator(count);
+    });
+
+    this._socket.on('command', (cmd) => {
+        this._handleRemoteCommand(cmd);
+        // Renvoyer le nouvel état après chaque commande
+        this._socket.emit('tv_state', this._getTVState());
+    });
+};
+
+Dashboard.prototype._getTVState = function () {
+    return {
+        section:      this.currentSection,
+        theme:        this.currentTheme,
+        zoom:         this.currentZoom,
+        speed:        this.updateInterval,
+        audioEnabled: this.audioEnabled
+    };
+};
+
+Dashboard.prototype._handleRemoteCommand = function (cmd) {
+    if (!cmd || typeof cmd.action !== 'string') {
+        return;
+    }
+
+    switch (cmd.action) {
+        case 'focus':
+            this._focusSection(cmd.section);
+            break;
+        case 'refresh':
+            dataGenerator.updateData();
+            this.updateCharts();
+            this.render();
+            this._showToast('Donnees rafraichies');
+            break;
+        case 'fullscreen':
+            this._toggleFullscreen();
+            break;
+        case 'zoom':
+            this._setZoom(this.currentZoom + (cmd.delta || 0));
+            break;
+        case 'toggle_sound':
+            this.audioEnabled = !this.audioEnabled;
+            try { localStorage.setItem('dashboard_audio_muted', this.audioEnabled ? '0' : '1'); } catch(e) {}
+            if (this.audioEnabled) { this.ensureAudioContext(); this.resumeAudioContext(); }
+            this.updateAudioToggleUI();
+            this._showToast(this.audioEnabled ? 'Son active' : 'Son desactive');
+            break;
+        case 'highlight':
+            this._highlightSection(this.currentSection !== 'all' ? this.currentSection : 'servers');
+            break;
+        case 'speed':
+            this._setUpdateSpeed(cmd.value);
+            break;
+        case 'theme':
+            this._setTheme(cmd.value);
+            break;
+        default:
+            break;
+    }
+};
+
+Dashboard.prototype._setUpdateSpeed = function (ms) {
+    const next = Number(ms);
+    if (!Number.isFinite(next) || next < 1000 || next > 60000) {
+        return;
+    }
+
+    clearInterval(this.intervalId);
+    this.updateInterval = next;
+    this.intervalId = setInterval(() => {
+        dataGenerator.updateData();
+        this.updateCharts();
+        this.render();
+        this.updateClock();
+    }, next);
+    const label = next < 2000 ? 'Rapide' : next > 10000 ? 'Lent' : 'Normal';
+    this._showToast(`${label} - ${next / 1000}s`);
+};
+
+Dashboard.prototype._emitRemoteAlert = function (severity, healthItems) {
+    if (!this._socket || !this._socket.connected) {
+        return;
+    }
+
+    this.lastBroadcastSeverity = severity;
+
+    const alert = {
+        severity,
+        timestamp: Date.now(),
+        message: severity === 'critical'
+            ? 'Alerte critique detectee sur la TV'
+            : severity === 'warning'
+                ? 'Alerte warning detectee sur la TV'
+                : 'Retour a la normale',
+        items: (healthItems || []).map(item => ({
+            name: item.name,
+            status: item.status,
+            value: item.value
+        }))
+    };
+
+    this._socket.emit('tv_alert', alert);
+};
+
+Dashboard.prototype._focusSection = function (section) {
+    this.currentSection = section;
+    const body = document.body;
+    const SELECTORS = {
+        servers: '#section-servers', database: '#section-database',
+        charts: '#section-charts', network: '#section-network',
+        logs: '#section-logs', health: '#section-health'
+    };
+
+    document.querySelectorAll('.dashboard-section').forEach(el => el.classList.remove('section-focused'));
+
+    if (section === 'all') {
+        body.classList.remove('focus-mode');
+    } else {
+        body.classList.add('focus-mode');
+        const el = document.querySelector(SELECTORS[section]);
+        if (el) {
+            el.classList.add('section-focused');
+            this._highlightSection(section);
+        }
+    }
+
+    setTimeout(() => Object.values(this.charts).forEach(c => c.resize()), 60);
+    this._showToast(section === 'all' ? 'Vue complete' : `Focalise: ${section}`);
+};
+
+Dashboard.prototype._highlightSection = function (section) {
+    const SELECTORS = {
+        servers: '#section-servers', database: '#section-database',
+        charts: '#section-charts', network: '#section-network',
+        logs: '#section-logs', health: '#section-health'
+    };
+
+    const el = document.querySelector(SELECTORS[section]);
+    if (!el) {
+        return;
+    }
+
+    el.classList.remove('section-highlighted');
+    void el.offsetWidth;
+    el.classList.add('section-highlighted');
+    setTimeout(() => el.classList.remove('section-highlighted'), 900);
+};
+
+Dashboard.prototype._setZoom = function (level) {
+    this.currentZoom = Math.max(1, Math.min(3, Math.round(level)));
+    document.body.classList.remove('zoom-2', 'zoom-3');
+    if (this.currentZoom === 2) document.body.classList.add('zoom-2');
+    if (this.currentZoom === 3) document.body.classList.add('zoom-3');
+    setTimeout(() => Object.values(this.charts).forEach(c => c.resize()), 60);
+    this._showToast(`Zoom x${this.currentZoom}`);
+};
+
+Dashboard.prototype._setTheme = function (theme) {
+    this.currentTheme = theme;
+    document.body.classList.remove('theme-neon', 'theme-minimal');
+    if (theme === 'neon') document.body.classList.add('theme-neon');
+    if (theme === 'minimal') document.body.classList.add('theme-minimal');
+    const labels = { dark: 'Theme dark', neon: 'Theme neon', minimal: 'Theme minimal' };
+    this._showToast(labels[theme] || theme);
+};
+
+Dashboard.prototype._toggleFullscreen = function () {
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+        return;
+    }
+
+    document.documentElement.requestFullscreen().catch(() => {
+        this._showToast('Autorisez le plein ecran puis reessayez');
+    });
+};
+
+Dashboard.prototype._updateRemoteIndicator = function (count) {
+    const indicator = document.getElementById('remoteIndicator');
+    const text = document.getElementById('remoteIndicatorText');
+    if (!indicator || !text) {
+        return;
+    }
+
+    if (count > 0) {
+        indicator.style.display = 'flex';
+        text.textContent = `${count} telecommande${count > 1 ? 's' : ''}`;
+        return;
+    }
+
+    indicator.style.display = 'none';
+};
+
+Dashboard.prototype._showToast = function (msg) {
+    let toast = document.getElementById('_tvToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = '_tvToast';
+        toast.className = 'tv-toast';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+};
 

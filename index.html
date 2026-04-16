@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Dashboard - Monitoring</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,6 +15,11 @@
             <h1>Server Monitoring Dashboard</h1>
             <div class="header-info">
                 <button id="audioToggle" class="audio-toggle" type="button" aria-pressed="false" title="Activer ou couper les sons d'alerte">Son: ON</button>
+                <button id="openRemoteBtn" class="remote-open-btn" type="button" title="Ouvrir la télécommande mobile">📱 Remote</button>
+                <span class="remote-indicator" id="remoteIndicator" style="display:none">
+                    <span class="remote-indicator-dot"></span>
+                    <span id="remoteIndicatorText">0 télécommande</span>
+                </span>
                 <span class="timestamp" id="timestamp">--:--:--</span>
                 <span class="status-indicator" id="statusIndicator">Live</span>
             </div>
@@ -21,65 +27,122 @@
 
         <!-- Main Grid -->
         <div class="dashboard-grid">
-            <!-- Servers Section -->
-            <section class="dashboard-section servers-section">
+            <section id="section-servers" class="dashboard-section servers-section">
                 <h2>Serveurs</h2>
-                <div class="servers-grid" id="serversContainer">
-                    <!-- Generated dynamically -->
-                </div>
+                <div class="servers-grid" id="serversContainer"></div>
             </section>
 
-            <!-- Database Section -->
-            <section class="dashboard-section database-section">
+            <section id="section-database" class="dashboard-section database-section">
                 <h2>Base de Données</h2>
-                <div class="metrics-grid" id="dbMetricsContainer">
-                    <!-- Generated dynamically -->
-                </div>
+                <div class="metrics-grid" id="dbMetricsContainer"></div>
                 <canvas id="dbChart" class="metric-chart"></canvas>
             </section>
 
-            <!-- CPU/Memory Charts -->
-            <section class="dashboard-section charts-section">
+            <section id="section-charts" class="dashboard-section charts-section">
                 <h2>Performance</h2>
                 <div class="charts-container">
-                    <div class="chart-wrapper">
-                        <canvas id="cpuChart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="memoryChart"></canvas>
-                    </div>
+                    <div class="chart-wrapper"><canvas id="cpuChart"></canvas></div>
+                    <div class="chart-wrapper"><canvas id="memoryChart"></canvas></div>
                 </div>
             </section>
 
-            <!-- Network Section -->
-            <section class="dashboard-section network-section">
+            <section id="section-network" class="dashboard-section network-section">
                 <h2>Réseau</h2>
                 <canvas id="networkChart" class="metric-chart"></canvas>
             </section>
 
-            <!-- Logs Section -->
-            <section class="dashboard-section logs-section">
+            <section id="section-logs" class="dashboard-section logs-section">
                 <h2>Logs Récents</h2>
-                <div class="logs-container" id="logsContainer">
-                    <!-- Generated dynamically -->
-                </div>
+                <div class="logs-container" id="logsContainer"></div>
             </section>
 
-            <!-- Health Status Section -->
-            <section class="dashboard-section health-section">
+            <section id="section-health" class="dashboard-section health-section">
                 <h2>État de Santé</h2>
-                <div class="health-grid" id="healthContainer">
-                    <!-- Generated dynamically -->
-                </div>
+                <div class="health-grid" id="healthContainer"></div>
             </section>
+        </div>
+    </div>
+
+    <!-- Mobile Banner (shown only on mobile) -->
+    <div class="mobile-banner" id="mobileBanner" style="display:none">
+        <div class="mobile-banner-text">
+            <span class="mobile-banner-icon">📱</span>
+            <span>Vous êtes sur mobile — utilisez la télécommande !</span>
+        </div>
+        <div class="mobile-banner-actions">
+            <a href="/remote" class="mobile-banner-btn">Ouvrir</a>
+            <button class="mobile-banner-close" id="closeMobileBanner">✕</button>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div class="tv-modal-overlay" id="qrModal" role="dialog" aria-modal="true">
+        <div class="tv-modal-content">
+            <h3>📱 Télécommande mobile</h3>
+            <p class="tv-modal-desc">Scannez ce QR code avec votre téléphone pour ouvrir la télécommande :</p>
+            <div class="qr-wrapper">
+                <canvas id="qrCanvas"></canvas>
+            </div>
+            <div class="tv-modal-url" id="qrUrl"></div>
+            <p class="tv-modal-hint">Assurez-vous d'être sur le même réseau Wi-Fi</p>
+            <button class="tv-modal-close" id="closeQrModal">Fermer</button>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script src="data-generator.js"></script>
     <script src="api-integration.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
     <script src="advanced-features.js"></script>
+
+    <script>
+        // ── QR Modal ───────────────────────────────────────────────────────
+        (function initQRModal() {
+            const openBtn  = document.getElementById('openRemoteBtn');
+            const modal    = document.getElementById('qrModal');
+            const closeBtn = document.getElementById('closeQrModal');
+            let   qrDone   = false;
+
+            openBtn.addEventListener('click', () => {
+                if (!qrDone) {
+                    const remoteUrl = window.location.origin + '/remote';
+                    document.getElementById('qrUrl').textContent = remoteUrl;
+                    if (typeof QRCode !== 'undefined') {
+                        QRCode.toCanvas(document.getElementById('qrCanvas'), remoteUrl, {
+                            width: 200,
+                            margin: 1,
+                            color: { dark: '#e8f2ff', light: '#0b1220' }
+                        });
+                    }
+                    qrDone = true;
+                }
+                modal.classList.add('open');
+            });
+
+            closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+            modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+        })();
+
+        // ── Mobile Banner ─────────────────────────────────────────────────
+        (function initMobileBanner() {
+            const isMobile = window.innerWidth < 900 &&
+                ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+            if (isMobile) {
+                try {
+                    if (!sessionStorage.getItem('mobile_banner_dismissed')) {
+                        document.getElementById('mobileBanner').style.display = 'flex';
+                    }
+                } catch(e) {
+                    document.getElementById('mobileBanner').style.display = 'flex';
+                }
+            }
+            document.getElementById('closeMobileBanner').addEventListener('click', () => {
+                document.getElementById('mobileBanner').style.display = 'none';
+                try { sessionStorage.setItem('mobile_banner_dismissed', '1'); } catch(e) {}
+            });
+        })();
+    </script>
 </body>
 </html>
 

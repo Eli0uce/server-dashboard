@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#080d18">
+    <title>📱 Télécommande Dashboard</title>
+    <link rel="stylesheet" href="remote.css">
+</head>
+<body>
+    <div class="remote-app">
+
+        <!-- Header -->
+        <header class="remote-header">
+            <div class="remote-title">
+                <span class="remote-logo">📱</span>
+                <span>Télécommande</span>
+            </div>
+            <div class="remote-status" id="tvStatus">
+                <span id="statusText">Connexion…</span>
+            </div>
+            <button class="icon-btn" id="shareBtn" title="Partager les URLs" aria-label="Partager">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- TV State Bar -->
+        <div class="tv-state-bar">
+            <span class="state-pill" id="stateSection">🖥️ Vue complète</span>
+            <span class="state-pill" id="stateTheme">🌑 Dark</span>
+            <span class="state-pill" id="stateZoom">🔍 Zoom ×1</span>
+            <span class="state-pill" id="stateSpeed">⏱ 5s</span>
+        </div>
+
+        <!-- Button Groups (rendered by remote.js) -->
+        <main class="remote-main" id="remoteMain"></main>
+
+        <!-- Share Modal -->
+        <div class="modal-overlay" id="shareModal" role="dialog" aria-modal="true">
+            <div class="modal-content">
+                <h3>🔗 URLs du Dashboard</h3>
+                <div class="share-row">
+                    <label>📺 Ouvrir sur TV</label>
+                    <div class="url-pill" id="tvUrl" title="Appuyer pour copier"></div>
+                </div>
+                <div class="share-row">
+                    <label>📱 Ouvrir télécommande</label>
+                    <div class="url-pill" id="remoteUrl" title="Appuyer pour copier"></div>
+                </div>
+                <p class="copy-hint">Appuyez sur une URL pour la copier</p>
+                <button class="modal-close-btn" id="closeShareModal">Fermer</button>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="remote-toast" id="remoteToast"></div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="remote.js"></script>
+</body>
+</html>
+

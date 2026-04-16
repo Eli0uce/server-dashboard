@@ -397,14 +397,271 @@ body {
 }
 
 @keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ═══════════════════════════════════════════════════════
+   STREAMDECK — TV Remote Control Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Bouton "📱 Remote" dans le header ── */
+.remote-open-btn {
+    border: 1px solid #3a4c6d;
+    background: #1a2740;
+    color: #cfe0fa;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+.remote-open-btn:hover { background: #213457; border-color: #516b95; }
+
+/* ── Indicateur remote(s) dans le header ── */
+.remote-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--success);
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(52,211,153,.1);
+    border: 1px solid rgba(52,211,153,.3);
+    white-space: nowrap;
+}
+.remote-indicator-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Focus Mode — une seule section plein écran ── */
+body.focus-mode .dashboard-section {
+    display: none;
+}
+body.focus-mode .section-focused {
+    display: block !important;
+    grid-column: 1 / -1;
+    animation: focusIn .35s ease-out;
+}
+@keyframes focusIn {
+    from { opacity: .4; transform: scale(.98); }
+    to   { opacity: 1;  transform: scale(1); }
+}
+
+/* ── Highlight animation (flash quand remote appuie sur Flash) ── */
+@keyframes sectionPulse {
+    0%   { box-shadow: 0 8px 20px rgba(2,8,18,.28), 0 0  0 0   rgba(125,211,252,.8); }
+    50%  { box-shadow: 0 8px 20px rgba(2,8,18,.28), 0 0 20px 4px rgba(125,211,252,.5); }
+    100% { box-shadow: 0 8px 20px rgba(2,8,18,.28), 0 0  0 0   rgba(125,211,252,0); }
+}
+.section-highlighted {
+    animation: sectionPulse .85s ease-out !important;
+}
+
+/* ── Zoom TV ── */
+body.zoom-2 .chart-wrapper       { height: 360px; }
+body.zoom-2 .metric-value        { font-size: 2.1rem; }
+body.zoom-2 .dashboard-section h2{ font-size: 1.35rem; }
+body.zoom-2 .server-stat         { font-size: 1rem; }
+body.zoom-2 .log-entry           { font-size: 0.98rem; }
+
+body.zoom-3 .chart-wrapper       { height: 480px; }
+body.zoom-3 .metric-value        { font-size: 2.9rem; }
+body.zoom-3 .dashboard-section h2{ font-size: 1.75rem; }
+body.zoom-3 .server-stat         { font-size: 1.15rem; }
+body.zoom-3 .log-entry           { font-size: 1.12rem; }
+body.zoom-3 .server-card         { padding: 20px; }
+
+/* ── Thème Néon ── */
+body.theme-neon {
+    --accent:       #00ffcc;
+    --bg:           #040810;
+    --bg-elevated:  #08112a;
+    --bg-soft:      #0a1530;
+    --line:         rgba(0,255,204,.15);
+    --text:         #d0f5ee;
+    background: #040810 !important;
+}
+body.theme-neon .dashboard-header {
+    border-color: rgba(0,255,204,.25);
+    box-shadow: 0 10px 30px rgba(0,255,204,.06);
+}
+body.theme-neon .dashboard-section {
+    border-color: rgba(0,255,204,.12);
+    box-shadow: 0 4px 24px rgba(0,255,204,.05);
+}
+body.theme-neon .status-indicator         { color: #00ffcc; }
+body.theme-neon .status-indicator::before { background: #00ffcc; }
+
+/* ── Thème Minimal ── */
+body.theme-minimal {
+    --bg:           #070b14;
+    --bg-elevated:  #0b1120;
+    --bg-soft:      #0d1426;
+    --line:         #16202e;
+    --text:         #b0bfd8;
+    --text-soft:    #4a6080;
+    --accent:       #6baed6;
+    background: #070b14 !important;
+}
+body.theme-minimal .dashboard-section {
+    border-color: var(--line);
+    box-shadow: none;
+    background: linear-gradient(180deg, rgba(13,20,38,.95) 0%, rgba(11,17,32,.97) 100%);
+}
+
+/* ── TV Toast notification ── */
+.tv-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    background: rgba(17,26,44,.96);
+    border: 1px solid #2d4070;
+    border-radius: 999px;
+    color: #c8d8f0;
+    padding: 9px 20px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 10010;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    backdrop-filter: blur(8px);
+}
+.tv-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ── Mobile Banner ── */
+.mobile-banner {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(135deg, #0f1e38, #0a1428);
+    border-top: 1px solid #2d4070;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10005;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.mobile-banner-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: #c8d8f0;
+    font-weight: 500;
+}
+.mobile-banner-icon { font-size: 1.3rem; }
+.mobile-banner-actions { display: flex; align-items: center; gap: 8px; }
+.mobile-banner-btn {
+    background: #2563eb;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .2s;
+}
+.mobile-banner-btn:hover { background: #1d4ed8; }
+.mobile-banner-close {
+    background: rgba(255,255,255,.08);
+    border: 1px solid #2d4070;
+    color: #8fa3c2;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background .2s;
+}
+.mobile-banner-close:hover { background: rgba(255,255,255,.14); }
+
+/* ── QR Modal ── */
+.tv-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    z-index: 10020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+}
+.tv-modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+.tv-modal-content {
+    background: #0d1526;
+    border: 1px solid #2d4070;
+    border-radius: 18px;
+    padding: 28px;
+    max-width: 380px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    transform: scale(.95);
+    transition: transform .25s;
+}
+.tv-modal-overlay.open .tv-modal-content { transform: scale(1); }
+.tv-modal-content h3 {
+    font-size: 1.1rem;
+    color: #e8f2ff;
+    font-weight: 700;
+}
+.tv-modal-desc  { font-size: .83rem; color: #8fa3c2; }
+.qr-wrapper {
+    background: #0b1220;
+    border: 1px solid #1e2e4a;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tv-modal-url {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: .75rem;
+    color: #93c5fd;
+    background: rgba(255,255,255,.04);
+    border: 1px solid #1e2e4a;
+    border-radius: 8px;
+    padding: 8px 14px;
+    word-break: break-all;
+}
+.tv-modal-hint { font-size: .72rem; color: #5878a0; }
+.tv-modal-close {
+    background: rgba(255,255,255,.07);
+    border: 1px solid #2d4070;
+    color: #c8d8f0;
+    border-radius: 10px;
+    padding: 10px 28px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .2s;
+}
+.tv-modal-close:hover { background: rgba(255,255,255,.13); }
 
 

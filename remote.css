@@ -1,0 +1,380 @@
+/* ═══════════════════════════════════════════════════
+   StreamDeck Remote – styles mobile
+   ═══════════════════════════════════════════════════ */
+
+:root {
+    --bg:            #080d18;
+    --bg-card:       #0d1526;
+    --bg-card-h:     #111d32;
+    --border:        #1e2e4a;
+    --text:          #c8d8f0;
+    --text-muted:    #5878a0;
+
+    /* Catégories boutons */
+    --c-views:       #132040;
+    --c-views-on:    #1d4ed8;
+    --c-views-text:  #93c5fd;
+
+    --c-ctrl:        #0d2b1a;
+    --c-ctrl-on:     #15803d;
+    --c-ctrl-text:   #86efac;
+
+    --c-speed:       #271a07;
+    --c-speed-on:    #b45309;
+    --c-speed-text:  #fcd34d;
+
+    --c-theme:       #1d0f33;
+    --c-theme-on:    #6d28d9;
+    --c-theme-text:  #c4b5fd;
+}
+
+*, *::before, *::after {
+    margin: 0; padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+html { height: 100%; }
+
+body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+}
+
+.remote-app {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── Header ─────────────────────────────────────── */
+.remote-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+}
+
+.remote-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e8f2ff;
+}
+
+.remote-logo { font-size: 1.4rem; }
+
+/* Status badge */
+.remote-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.remote-status.connected   { background: rgba(22,163,74,.12);  border-color: rgba(22,163,74,.35);   color: #4ade80; }
+.remote-status.no-tv       { background: rgba(217,119,6,.12);  border-color: rgba(217,119,6,.35);   color: #fbbf24; }
+.remote-status.disconnected{ background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.35);   color: #f87171; }
+
+.icon-btn {
+    width: 36px; height: 36px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+.icon-btn:active { background: var(--bg-card-h); }
+
+/* ─── TV State Bar ───────────────────────────────── */
+.tv-state-bar {
+    background: rgba(8,13,24,.9);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tv-state-bar::-webkit-scrollbar { display: none; }
+
+.state-pill {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    transition: all .25s;
+}
+.state-pill.active {
+    color: #93c5fd;
+    border-color: rgba(59,130,246,.4);
+    background: rgba(59,130,246,.1);
+}
+
+/* ─── Main ───────────────────────────────────────── */
+.remote-main {
+    flex: 1;
+    padding: 14px 12px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ─── Button Groups ──────────────────────────────── */
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-group-label {
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 2px;
+}
+
+.btn-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+/* ─── StreamDeck Button ──────────────────────────── */
+.sd-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 16px 8px 14px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 86px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .1s ease, box-shadow .2s ease;
+}
+
+.sd-btn:active {
+    transform: scale(0.91);
+}
+
+/* Ripple effect */
+.sd-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: rgba(255,255,255,.15);
+    opacity: 0;
+    transition: opacity .15s;
+}
+.sd-btn:active::after { opacity: 1; }
+
+.sd-emoji {
+    font-size: 1.65rem;
+    line-height: 1;
+    display: block;
+}
+
+.sd-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* ── Views ── */
+.sd-views {
+    background: var(--c-views);
+    border-color: rgba(29,78,216,.2);
+    color: var(--c-views-text);
+}
+.sd-views.active {
+    background: var(--c-views-on);
+    border-color: rgba(96,165,250,.7);
+    color: #eff6ff;
+    box-shadow: 0 0 18px rgba(29,78,216,.45);
+}
+
+/* ── Controls ── */
+.sd-ctrl {
+    background: var(--c-ctrl);
+    border-color: rgba(21,128,61,.2);
+    color: var(--c-ctrl-text);
+}
+.sd-ctrl.active {
+    background: var(--c-ctrl-on);
+    border-color: rgba(34,197,94,.6);
+    color: #f0fdf4;
+    box-shadow: 0 0 18px rgba(21,128,61,.4);
+}
+
+/* ── Speed ── */
+.sd-speed {
+    background: var(--c-speed);
+    border-color: rgba(180,83,9,.2);
+    color: var(--c-speed-text);
+}
+.sd-speed.active {
+    background: var(--c-speed-on);
+    border-color: rgba(251,191,36,.6);
+    color: #fffbeb;
+    box-shadow: 0 0 18px rgba(180,83,9,.4);
+}
+
+/* ── Themes ── */
+.sd-theme {
+    background: var(--c-theme);
+    border-color: rgba(109,40,217,.2);
+    color: var(--c-theme-text);
+}
+.sd-theme.active {
+    background: var(--c-theme-on);
+    border-color: rgba(167,139,250,.6);
+    color: #f5f3ff;
+    box-shadow: 0 0 18px rgba(109,40,217,.4);
+}
+
+/* ─── Share Modal ────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+}
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background: #0f1928;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transform: translateY(16px);
+    transition: transform .25s;
+}
+.modal-overlay.open .modal-content { transform: translateY(0); }
+
+.modal-content h3 {
+    font-size: 1.05rem;
+    color: #e8f2ff;
+    font-weight: 700;
+}
+
+.share-row { display: flex; flex-direction: column; gap: 5px; }
+.share-row label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+
+.url-pill {
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: 0.76rem;
+    font-family: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    color: #93c5fd;
+    word-break: break-all;
+    cursor: pointer;
+    transition: background .15s;
+}
+.url-pill:active { background: rgba(59,130,246,.1); }
+
+.copy-hint {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.modal-close-btn {
+    background: rgba(255,255,255,.07);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 13px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+}
+.modal-close-btn:active { background: rgba(255,255,255,.14); }
+
+/* ─── Toast ──────────────────────────────────────── */
+.remote-toast {
+    position: fixed;
+    bottom: max(28px, env(safe-area-inset-bottom, 28px));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a2a44;
+    border: 1px solid #2d4070;
+    color: #c8d8f0;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+}
+.remote-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Responsive tweaks ──────────────────────────── */
+@media (min-width: 480px) {
+    .btn-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 680px) {
+    .btn-grid { grid-template-columns: repeat(5, 1fr); }
+    .sd-btn { min-height: 96px; }
+}
+
